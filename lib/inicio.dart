@@ -4,7 +4,7 @@ import 'package:proyecto/main.dart';
 class Inicio extends StatefulWidget {
   final String username; // Añadir una variable para el nombre de usuario
 
-  const Inicio({Key? key, required this.username}) : super(key: key);
+  const Inicio({super.key, required this.username});
 
   @override
   _InicioState createState() => _InicioState();
