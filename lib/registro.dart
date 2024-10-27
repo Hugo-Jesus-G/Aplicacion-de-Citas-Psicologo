@@ -40,8 +40,13 @@ class RegistroScreen extends StatefulWidget {
 }
 
 class _RegistroScreenState extends State<RegistroScreen> {
+  TextEditingController emailController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  TextEditingController numberController = TextEditingController();
+  TextEditingController telefonoController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
   // Método para agregar usuarios a Firestore
-  static Future<void> RegistrarUser({
+  Future<void> registrarUser({
     required String name,
     required String email,
     required String matricula,
@@ -100,7 +105,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
     );
   }
 
-  static void _showSuccessDialog(BuildContext context, String message) {
+   void _showSuccessDialog(BuildContext context, String message) {
     showDialog(
       context: context,
       builder: (context) {
@@ -111,6 +116,12 @@ class _RegistroScreenState extends State<RegistroScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+                //limpiar campos
+                emailController.clear();
+                nameController.clear();
+                numberController.clear();
+                telefonoController.clear();
+                passwordController.clear();
               },
               child: Text('OK'),
             ),
@@ -122,12 +133,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController emailController = TextEditingController();
-    TextEditingController nameController = TextEditingController();
-    TextEditingController numberController = TextEditingController();
-    TextEditingController telefonoController = TextEditingController();
-    TextEditingController passwordController = TextEditingController();
-
     double screenWidth = MediaQuery.of(context).size.width;
 
     return Padding(
@@ -232,7 +237,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   ),
                 ),
                 onPressed: () async {
-                  await RegistrarUser(
+                  await registrarUser(
                     name: nameController.text,
                     email: emailController.text,
                     matricula: numberController.text,
