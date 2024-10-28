@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:proyecto/login.dart';
+import 'package:proyecto/alumno.dart';
 import 'package:proyecto/main.dart';
+import 'package:proyecto/obtenerDatos.dart';
+import 'package:proyecto/perfil.dart';
 
 class Inicio extends StatefulWidget {
   final String username; // Añadir una variable para el nombre de usuario
@@ -12,7 +14,20 @@ class Inicio extends StatefulWidget {
 }
 
 class _InicioState extends State<Inicio> {
+  Alumno? alumno; // Variable para almacenar el objeto Alumno
+
   String selectedContent = 'crear';
+
+  @override
+  void initState() {
+    super.initState();
+    obtenerAlumno();
+  }
+
+  Future<void> obtenerAlumno() async {
+    alumno = await obtenerAlumnoPorCorreo(widget.username);
+    setState(() {}); 
+  }
 
   void updateContent(String content) {
     setState(() {
@@ -50,11 +65,20 @@ class _InicioState extends State<Inicio> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Muestra el nombre del alumno si no es null
                   Text(
-                    widget.username,
+                    "Nombre: ${alumno != null ? alumno!.nombre : 'Cargando...'}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
+                    ),
+                  ),
+                  // Agrega más información si lo deseas
+                  Text(
+                    "Correo: ${alumno != null ? alumno!.correo : ''}",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
                     ),
                   ),
                 ],
@@ -64,8 +88,14 @@ class _InicioState extends State<Inicio> {
               leading: Icon(Icons.person),
               title: Text('Perfil'),
               onTap: () {
-                // Aquí puedes agregar la lógica para cerrar sesión
-                Navigator.pop(context);
+                Navigator.pushReplacement(
+
+
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Perfil(username: widget.username),
+                  ),
+                );
               },
             ),
             ListTile(
@@ -102,7 +132,7 @@ class _InicioState extends State<Inicio> {
             ],
           ),
           Expanded(
-          child: Center(
+            child: Center(
               child: getContent(),
             ),
           ),
