@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:proyecto/firebase/firebase_auth_service.dart';
 import 'package:proyecto/main.dart';
 
 class HomeRegistro extends StatefulWidget {
@@ -45,91 +46,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
   TextEditingController numberController = TextEditingController();
   TextEditingController telefonoController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
-  // Método para agregar usuarios a Firestore
-  Future<void> registrarUser({
-    required String name,
-    required String email,
-    required String matricula,
-    required String telefono,
-    required String password,
-    required BuildContext context,
-  }) async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-
-    // Verificar si los campos están vacíos
-    if (email.isEmpty ||
-        matricula.isEmpty ||
-        name.isEmpty ||
-        telefono.isEmpty ||
-        password.isEmpty) {
-      _showErrorDialog(context, 'Debe de llenar todos los campos.');
-      return;
-    }
-
-    try {
-      // Guardar datos del usuario en Firestore
-      await firestore.collection('alumnos').add({
-        'correo': email,
-        'matricula': matricula,
-        'nombre': name,
-        'telefono': telefono,
-        'contraseña': password,
-      });
-
-      // Mostrar un mensaje de éxito
-      _showSuccessDialog(context, 'Usuario registrado con éxito.');
-    } catch (e) {
-      // Manejo de errores
-      _showErrorDialog(context, 'Ocurrió un error: $e');
-    }
-  }
-
-  // Métodos para mostrar diálogos
-  static void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Error'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-   void _showSuccessDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Éxito'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                //limpiar campos
-                emailController.clear();
-                nameController.clear();
-                numberController.clear();
-                telefonoController.clear();
-                passwordController.clear();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +153,7 @@ class _RegistroScreenState extends State<RegistroScreen> {
                   ),
                 ),
                 onPressed: () async {
-                  await registrarUser(
+                  bool success = await FirebaseAuthService.registerUser(
                     name: nameController.text,
                     email: emailController.text,
                     matricula: numberController.text,
@@ -245,6 +161,14 @@ class _RegistroScreenState extends State<RegistroScreen> {
                     password: passwordController.text,
                     context: context,
                   );
+
+                  if (success) {
+                    nameController.clear();
+                    emailController.clear();
+                    numberController.clear();
+                    telefonoController.clear();
+                    passwordController.clear();
+                  }
                 },
                 child: Text(
                   "Registrarse",

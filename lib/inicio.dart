@@ -1,32 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:proyecto/alumno.dart';
+import 'package:proyecto/firebase/firebase_auth_service.dart';
 import 'package:proyecto/main.dart';
-import 'package:proyecto/obtenerDatos.dart';
 import 'package:proyecto/perfil.dart';
 
 class Inicio extends StatefulWidget {
-  final String username; // Añadir una variable para el nombre de usuario
+  Inicio({super.key});
 
-  const Inicio({super.key, required this.username});
+  String? uid = FirebaseAuthService.getUserId();
 
   @override
   _InicioState createState() => _InicioState();
 }
 
 class _InicioState extends State<Inicio> {
-  Alumno? alumno; // Variable para almacenar el objeto Alumno
-
   String selectedContent = 'crear';
 
   @override
   void initState() {
     super.initState();
-    obtenerAlumno();
-  }
-
-  Future<void> obtenerAlumno() async {
-    alumno = await obtenerAlumnoPorCorreo(widget.username);
-    setState(() {}); 
   }
 
   void updateContent(String content) {
@@ -67,7 +58,7 @@ class _InicioState extends State<Inicio> {
                 children: [
                   // Muestra el nombre del alumno si no es null
                   Text(
-                    "Nombre: ${alumno != null ? alumno!.nombre : 'Cargando...'}",
+                    "Nombre: ${widget.uid}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 24,
@@ -75,7 +66,7 @@ class _InicioState extends State<Inicio> {
                   ),
                   // Agrega más información si lo deseas
                   Text(
-                    "Correo: ${alumno != null ? alumno!.correo : ''}",
+                    "Nombre: ${widget.uid}",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,
@@ -88,13 +79,9 @@ class _InicioState extends State<Inicio> {
               leading: Icon(Icons.person),
               title: Text('Perfil'),
               onTap: () {
-                Navigator.pushReplacement(
-
-
+                Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => Perfil(username: widget.username),
-                  ),
+                  MaterialPageRoute(builder: (context) => Perfil()),
                 );
               },
             ),
