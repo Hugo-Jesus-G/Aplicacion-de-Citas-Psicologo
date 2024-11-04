@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto/firebase/firebase_auth_service.dart';
-import 'package:proyecto/inicio.dart';
 import 'package:proyecto/registro.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,7 +16,7 @@ class _LoginScreen extends State<LoginScreen> {
 
   void _togglePasswordVisibility() {
     setState(() {
-      _obscureText = !_obscureText; // Cambia el estado de visibilidad
+      _obscureText = !_obscureText;
     });
   }
 
@@ -99,7 +97,7 @@ class _LoginScreen extends State<LoginScreen> {
             width: double.infinity,
             child: ElevatedButton(
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(
+                backgroundColor: WidgetStateProperty.all(
                   const Color.fromARGB(255, 49, 39, 199),
                 ),
               ),

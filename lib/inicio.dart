@@ -1,42 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:proyecto/firebase/firebase_auth_service.dart';
+import 'package:proyecto/PagesCitas/crearCita.dart.dart';
+import 'package:proyecto/PagesCitas/importante.dart';
+import 'package:proyecto/PagesCitas/mostrarCitas.dart.dart';
+import 'package:proyecto/firebase/consultas.dart';
 import 'package:proyecto/main.dart';
 import 'package:proyecto/perfil.dart';
 
 class Inicio extends StatefulWidget {
   Inicio({super.key});
 
-  String? uid = FirebaseAuthService.getUserId();
-
   @override
   _InicioState createState() => _InicioState();
 }
 
 class _InicioState extends State<Inicio> {
-  String selectedContent = 'crear';
+  int _selectedIndex = 0; // Índice para el BottomNavigationBar
 
-  @override
-  void initState() {
-    super.initState();
-  }
+  // Lista de widgets que se mostrarán en el cuerpo
+  final List<Widget> _widgetOptions = [
+    CrearCitaPage(),
+    MostrarCitas(),
+    importante(),
+  ];
 
-  void updateContent(String content) {
+  void _onItemTapped(int index) {
     setState(() {
-      selectedContent = content;
+      _selectedIndex = index;
     });
-  }
-
-  Widget getContent() {
-    switch (selectedContent) {
-      case 'crear':
-        return Text('Contenido para Crear Cita');
-      case 'consultar':
-        return Text('Contenido para Consultar Citas');
-      case 'cancelar':
-        return Text('Contenido para Cancelar');
-      default:
-        return Text('Seleccione una opción');
-    }
   }
 
   @override
@@ -51,28 +41,40 @@ class _InicioState extends State<Inicio> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: const Color.fromARGB(255, 13, 155, 72),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Muestra el nombre del alumno si no es null
-                  Text(
-                    "Nombre: ${widget.uid}",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                    ),
-                  ),
-                  // Agrega más información si lo deseas
-                  Text(
-                    "Nombre: ${widget.uid}",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
+              child: FutureBuilder<String>(
+                future: Consultas().getNombre(),
+                builder:
+                    (BuildContext context, AsyncSnapshot<String> snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Text(
+                      'Error: ${snapshot.error}',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
+                    );
+                  } else if (snapshot.hasData) {
+                    return Text(
+                      "Nombre: ${snapshot.data}",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
+                    );
+                  } else {
+                    return Text(
+                      "Nombre no encontrado",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                      ),
+                    );
+                  }
+                },
               ),
             ),
             ListTile(
@@ -89,41 +91,71 @@ class _InicioState extends State<Inicio> {
               leading: Icon(Icons.logout),
               title: Text('Cerrar Sesión'),
               onTap: () {
-                // Aquí puedes agregar la lógica para cerrar sesión
-                Navigator.pushReplacement(
+//cerrar sesion defirebase
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => MyApp()),
                 );
               },
             ),
+            //informacion de contacto en el footer del menu
+            ListTile(
+              title: Text(
+                'Infromacion del Psicologo',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            //infromacion de contacto
+            ListTile(
+              title: Text(
+                'Nombre: Psicologo',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            ListTile(
+              title: Text(
+                'Telefono: 123456789',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            //soporte tecnico
+            ListTile(
+              title: Text(
+                'Soporte Tecnico',
+                textAlign: TextAlign.center,
+              ),
+            ),
+            ListTile(
+              title: Text(
+                'Telefono: 123456789',
+                textAlign: TextAlign.center,
+              ),
+            ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              ElevatedButton(
-                onPressed: () => updateContent('crear'),
-                child: Text('Crear Cita'),
-              ),
-              ElevatedButton(
-                onPressed: () => updateContent('consultar'),
-                child: Text('Consultar Citas'),
-              ),
-              ElevatedButton(
-                onPressed: () => updateContent('cancelar'),
-                child: Text('Cancelar'),
-              ),
-            ],
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedIndex),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.add),
+            label: 'Crear Cita',
           ),
-          Expanded(
-            child: Center(
-              child: getContent(),
-            ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Consultar Citas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.warning),
+            label: 'Aviso',
           ),
         ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: const Color.fromARGB(255, 12, 36, 172),
+        unselectedItemColor: const Color.fromARGB(255, 0, 0, 0),
       ),
     );
   }
