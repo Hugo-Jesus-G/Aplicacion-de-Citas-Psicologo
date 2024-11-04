@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:proyecto/Mensajes/mensajes.dart';
-import 'package:proyecto/PagesCitas/mostrarCitas.dart.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CrearCitaPage extends StatefulWidget {
@@ -85,7 +84,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
               SizedBox(height: 20),
               TableCalendar(
                 focusedDay: _selectedDate,
-                firstDay: DateTime.utc(2000, 1, 1),
+                firstDay: DateTime.utc(2024, 1, 1),
                 lastDay: DateTime.utc(2101, 1, 1),
                 onDaySelected: _onDaySelected,
                 selectedDayPredicate: (day) => isSameDay(day, _selectedDate),
@@ -143,7 +142,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _crearCita,
-                child: Text('Crear Cita'),
+                child: Text('Generar Cita'),
               ),
             ],
           ),
