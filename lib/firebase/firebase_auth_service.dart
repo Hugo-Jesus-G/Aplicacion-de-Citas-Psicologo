@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto/Mensajes/mensajes.dart';
+import 'package:proyecto/PagesPsico/InicioPsico.dart';
 import 'package:proyecto/inicio.dart';
 
 class FirebaseAuthService {
@@ -28,9 +29,27 @@ class FirebaseAuthService {
         return;
       }
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => Inicio()),
-      );
+      final userId = userCredential.user!.uid;
+
+      // Verificar si el usuario es un alumno o psicólogo
+      DocumentSnapshot alumnoDoc = await FirebaseFirestore.instance
+          .collection('alumnos')
+          .doc(userId)
+          .get();
+      DocumentSnapshot psicologoDoc = await FirebaseFirestore.instance
+          .collection('psicologos')
+          .doc(userId)
+          .get();
+
+      if (alumnoDoc.exists) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => Inicio()),
+        );
+      } else if (psicologoDoc.exists) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => InicioPsico()),
+        );
+      }
     } catch (e) {
       Mensajes().showErrorDialog(context, 'Correo o contraseña incorrectos.');
     }

@@ -1,26 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:proyecto/PagesCitas/crearCita.dart';
-import 'package:proyecto/PagesCitas/importante.dart';
-import 'package:proyecto/PagesCitas/mostrarCitas.dart.dart';
+import 'package:proyecto/PagesPsico/consultasPsico.dart';
+import 'package:proyecto/PagesPsico/perfilPsico.dart';
 import 'package:proyecto/firebase/consultas.dart';
 import 'package:proyecto/main.dart';
-import 'package:proyecto/perfil.dart';
 
-class Inicio extends StatefulWidget {
-  Inicio({super.key});
+class InicioPsico extends StatefulWidget {
+  InicioPsico({super.key});
 
   @override
-  _InicioState createState() => _InicioState();
+  _InicioPsicoState createState() => _InicioPsicoState();
 }
 
-class _InicioState extends State<Inicio> {
+class _InicioPsicoState extends State<InicioPsico> {
   int _selectedIndex = 0; // Índice para el BottomNavigationBar
 
   // Lista de widgets que se mostrarán en el cuerpo
   final List<Widget> _widgetOptions = [
-    CrearCitaPage(),
-    MostrarCitas(),
-    importante(),
+    MostrarCitasPsicologo(),
+    Text("infroamcion psicolof"),
+    Text("infroamcion psicolof"),
   ];
 
   void _onItemTapped(int index) {
@@ -59,10 +57,10 @@ class _InicioState extends State<Inicio> {
                     );
                   } else if (snapshot.hasData) {
                     return Text(
-                      "Bienvenido: \n${snapshot.data}",
+                      "Nombre: ${snapshot.data}",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 30,
+                        fontSize: 24,
                       ),
                     );
                   } else {
@@ -83,7 +81,7 @@ class _InicioState extends State<Inicio> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Perfil()),
+                  MaterialPageRoute(builder: (context) => PerfilPsicologo()),
                 );
               },
             ),

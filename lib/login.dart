@@ -67,7 +67,7 @@ class _LoginScreen extends State<LoginScreen> {
             keyboardType: TextInputType.visiblePassword,
             decoration: InputDecoration(
               prefixIcon: Icon(Icons.lock, color: Colors.black),
-              hintText: "Ingresa tu Contraseña",
+              hintText: "Ingresa tu contraseña",
               labelText: "Contraseña",
               suffixIcon: IconButton(
                 icon: Icon(

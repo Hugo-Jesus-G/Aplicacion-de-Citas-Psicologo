@@ -29,7 +29,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
           'psicologoId': 'FL4AgbBVePXxX9ACspBZ0k4NrbD2',
         });
         Mensajes()
-            .showSuccessDialog(context, "la cita se ha creado correctamente");
+            .showSuccessDialog(context, "La cita se ha creado correctamente");
       } catch (e) {
         print('Error al crear la cita: $e');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -64,13 +64,19 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                'Ingresa Motivo:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
               TextFormField(
                 decoration: InputDecoration(
-                  labelText: 'Escribe el Motivo de tu cita ',
+                  hintText: 'Escribe el motivo de tu cita',
                   border: OutlineInputBorder(),
                 ),
-                maxLines: 4,
+                maxLines: 2,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor ingresa un motivo';
@@ -82,12 +88,21 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                 },
               ),
               SizedBox(height: 20),
+              Text(
+                'Selecciona Fecha:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 8),
               TableCalendar(
                 focusedDay: _selectedDate,
                 firstDay: DateTime.utc(2024, 1, 1),
                 lastDay: DateTime.utc(2101, 1, 1),
                 onDaySelected: _onDaySelected,
                 selectedDayPredicate: (day) => isSameDay(day, _selectedDate),
+                enabledDayPredicate: (day) {
+                  return day
+                      .isAfter(DateTime.now().subtract(Duration(days: 1)));
+                },
                 calendarStyle: CalendarStyle(
                   todayDecoration: BoxDecoration(
                     color: Colors.blueAccent,
@@ -101,34 +116,23 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                     color: Colors.grey.withOpacity(0.5),
                     shape: BoxShape.circle,
                   ),
+                  disabledDecoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.0),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
               SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.info,
-                      color: Colors.white,
-                      size: 12.0,
-                    ),
-                  ),
-                  SizedBox(width: 8.0),
-                  Text(
-                    'No Laborables',
-                    style: TextStyle(color: Colors.grey, fontSize: 10),
-                  ),
-                ],
+              Text(
+                'Selecciona Hora:',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 8),
               TextFormField(
-                decoration: InputDecoration(labelText: 'Hora (HH:MM)'),
+                decoration: InputDecoration(
+                  hintText: 'Hora (HH:MM)',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Por favor ingresa una hora';

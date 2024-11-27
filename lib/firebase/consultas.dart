@@ -14,19 +14,32 @@ class Consultas {
 
     if (id != null) {
       try {
-        final doc = await FirebaseFirestore.instance
+        // Verificar en la colección de alumnos
+        final alumnoDoc = await FirebaseFirestore.instance
             .collection('alumnos')
             .doc(id)
             .get();
 
-        if (doc.exists) {
-          final nombre = doc.data()?['nombre'] ?? 'Nombre no encontrado';
+        if (alumnoDoc.exists) {
+          final nombre = alumnoDoc.data()?['nombre'] ?? 'Nombre no encontrado';
           return nombre;
-        } else {
-          return 'Nombre no encontrado';
         }
+
+        // Verificar en la colección de psicólogos
+        final psicologoDoc = await FirebaseFirestore.instance
+            .collection('psicologos')
+            .doc(id)
+            .get();
+
+        if (psicologoDoc.exists) {
+          final nombre =
+              psicologoDoc.data()?['nombre'] ?? 'Nombre no encontrado';
+          return nombre;
+        }
+
+        return 'Nombre no encontrado'; // Si no se encuentra en ninguna colección
       } catch (e) {
-        print('Error al obtener datos: ');
+        print('Error al obtener datos: $e');
       }
     }
     return 'Nombre no encontrado';
@@ -81,5 +94,31 @@ class Consultas {
     } catch (e) {
       print('Error al editar la cita: $e');
     }
+  }
+
+//obtener citas generales del psciologo
+  Future<List<Map<String, dynamic>>> getCitasDelPsicologo() async {
+    final psicologoId = await getUserId();
+
+    if (psicologoId != null) {
+      try {
+        QuerySnapshot snapshot = await FirebaseFirestore.instance
+            .collection('citas')
+            .where('psicologoId',
+                isEqualTo:
+                    psicologoId) // Suponiendo que este es el campo en la colección 'citas'
+            .get();
+
+        return snapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id; // Agregar el ID del documento al mapa
+          return data;
+        }).toList();
+      } catch (e) {
+        print('Error al obtener citas: $e');
+        return [];
+      }
+    }
+    return [];
   }
 }
