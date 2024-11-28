@@ -14,7 +14,7 @@ class Inicio extends StatefulWidget {
 }
 
 class _InicioState extends State<Inicio> {
-  int _selectedIndex = 0; // Índice para el BottomNavigationBar
+  int _selectedIndex = 0; 
 
   // Lista de widgets que se mostrarán en el cuerpo
   final List<Widget> _widgetOptions = [
