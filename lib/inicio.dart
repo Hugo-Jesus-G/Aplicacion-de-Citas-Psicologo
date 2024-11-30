@@ -16,7 +16,6 @@ class Inicio extends StatefulWidget {
 class _InicioState extends State<Inicio> {
   int _selectedIndex = 0; 
 
-  // Lista de widgets que se mostrarán en el cuerpo
   final List<Widget> _widgetOptions = [
     CrearCitaPage(),
     MostrarCitas(),
@@ -91,7 +90,6 @@ class _InicioState extends State<Inicio> {
               leading: Icon(Icons.logout),
               title: Text('Cerrar Sesión'),
               onTap: () {
-//cerrar sesion defirebase
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => MyApp()),

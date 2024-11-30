@@ -16,6 +16,37 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
   String _hora = '';
   DateTime _selectedDate = DateTime.now();
 
+  List<String> _motivosList = []; // Lista de motivos
+  bool _isLoading = true; // Indicador de carga
+
+  @override
+  void initState() {
+    super.initState();
+    _obtenerMotivos(); // Llamamos a la función para cargar los motivos desde Firestore
+  }
+
+  Future<void> _obtenerMotivos() async {
+    try {
+      var snapshot = await FirebaseFirestore.instance
+          .collection('motivos') // Nombre de la colección
+          .doc('Rb2tgoPfMh92tT9aGK0J') // ID del documento
+          .get();
+
+      if (snapshot.exists) {
+        setState(() {
+          _motivosList = List<String>.from(
+              snapshot['motivo']); // Cargamos la lista de motivos
+          _isLoading = false; // Cambiamos el estado a cargado
+        });
+      }
+    } catch (e) {
+      print('Error al obtener los motivos: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _crearCita() async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
 
@@ -71,23 +102,42 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
-              TextFormField(
-                decoration: InputDecoration(
-                  hintText: 'Escribe el motivo de tu cita',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa un motivo';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  _motivo = value;
-                },
-              ),
-              SizedBox(height: 20),
+              // Si los motivos están cargados, mostramos el Dropdown
+              _isLoading
+                  ? CircularProgressIndicator() 
+                  : DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal:16), 
+                      ),
+                      hint: Text(
+                        'Selecciona el motivo de tu cita',
+                        style: TextStyle(fontSize: 16), 
+                      ),
+                      value: _motivo.isNotEmpty ? _motivo : null,
+                      onChanged: (String? newValue) {
+                        setState(() {_motivo = newValue ??'';
+                        });
+                      },
+                      items: _motivosList.map<DropdownMenuItem<String>>((String motivo) {
+                        return DropdownMenuItem<String>(
+                          value: motivo,
+                          child: Text(
+                            motivo,
+                            style: TextStyle(fontSize: 16), 
+                          ),
+                        );
+                      }).toList(),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor selecciona un motivo';
+                        }
+                        return null;
+                      },
+                    ),
+              SizedBox(height: 40), 
               Text(
                 'Selecciona Fecha:',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -101,7 +151,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                 selectedDayPredicate: (day) => isSameDay(day, _selectedDate),
                 enabledDayPredicate: (day) {
                   return day
-                      .isAfter(DateTime.now().subtract(Duration(days: 1)));
+                      .isAfter(DateTime.now().subtract(Duration(days: 2)));
                 },
                 calendarStyle: CalendarStyle(
                   todayDecoration: BoxDecoration(
