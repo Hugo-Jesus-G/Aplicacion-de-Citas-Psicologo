@@ -22,7 +22,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
   @override
   void initState() {
     super.initState();
-    _obtenerMotivos(); // Llamamos a la función para cargar los motivos desde Firestore
+    _obtenerMotivos();
   }
 
   Future<void> _obtenerMotivos() async {
@@ -34,9 +34,8 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
 
       if (snapshot.exists) {
         setState(() {
-          _motivosList = List<String>.from(
-              snapshot['motivo']); // Cargamos la lista de motivos
-          _isLoading = false; // Cambiamos el estado a cargado
+          _motivosList = List<String>.from(snapshot['motivo']);
+          _isLoading = false;
         });
       }
     } catch (e) {
@@ -91,6 +90,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
         title: Text('Crear Cita'),
       ),
       body: SingleChildScrollView(
+        physics: ClampingScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -102,31 +102,31 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
-              // Si los motivos están cargados, mostramos el Dropdown
               _isLoading
-                  ? CircularProgressIndicator() 
+                  ? CircularProgressIndicator()
                   : DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                            vertical: 12,
-                            horizontal:16), 
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                       ),
                       hint: Text(
                         'Selecciona el motivo de tu cita',
-                        style: TextStyle(fontSize: 16), 
+                        style: TextStyle(fontSize: 16),
                       ),
                       value: _motivo.isNotEmpty ? _motivo : null,
                       onChanged: (String? newValue) {
-                        setState(() {_motivo = newValue ??'';
+                        setState(() {
+                          _motivo = newValue ?? '';
                         });
                       },
-                      items: _motivosList.map<DropdownMenuItem<String>>((String motivo) {
+                      items: _motivosList
+                          .map<DropdownMenuItem<String>>((String motivo) {
                         return DropdownMenuItem<String>(
                           value: motivo,
                           child: Text(
                             motivo,
-                            style: TextStyle(fontSize: 16), 
+                            style: TextStyle(fontSize: 16),
                           ),
                         );
                       }).toList(),
@@ -137,7 +137,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                         return null;
                       },
                     ),
-              SizedBox(height: 40), 
+              SizedBox(height: 40),
               Text(
                 'Selecciona Fecha:',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -151,7 +151,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                 selectedDayPredicate: (day) => isSameDay(day, _selectedDate),
                 enabledDayPredicate: (day) {
                   return day
-                      .isAfter(DateTime.now().subtract(Duration(days: 2)));
+                      .isAfter(DateTime.now().subtract(Duration(days: 1)));
                 },
                 calendarStyle: CalendarStyle(
                   todayDecoration: BoxDecoration(
@@ -171,6 +171,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                     shape: BoxShape.circle,
                   ),
                 ),
+                availableGestures: AvailableGestures.none,
               ),
               SizedBox(height: 20),
               Text(
