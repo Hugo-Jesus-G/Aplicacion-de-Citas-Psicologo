@@ -29,46 +29,72 @@ class _PerfilState extends State<Perfil> {
     return Container(
       child: Center(
         child: alumno != null
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Image.asset("assets/images/person.png",
-                      width: 200, height: 200),
-                  SizedBox(height: 20),
-                  Text('Nombre: ${alumno!.nombre}',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  Text('Correo: ${alumno!.correo}',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  Text('Teléfono: ${alumno!.telefono}',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
-                  Text('Matrícula: ${alumno!.matricula}',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 50),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFC5E0F8),
-                      side: BorderSide(color: Colors.black),
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.zero,
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: constraints.maxWidth * 0.05),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Image.asset(
+                            "assets/images/person.png",
+                            width: constraints.maxWidth * 0.4,
+                            height: constraints.maxWidth * 0.4,
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            'Nombre: ${alumno!.nombre}',
+                            style: TextStyle(
+                                fontSize: constraints.maxWidth * 0.05,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Correo: ${alumno!.correo}',
+                            style: TextStyle(
+                                fontSize: constraints.maxWidth * 0.05,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'Teléfono: ${alumno!.telefono}',
+                            style: TextStyle(
+                                fontSize: constraints.maxWidth * 0.05,
+                                fontWeight: FontWeight.w900),
+                          ),
+                          Text(
+                            'Matrícula: ${alumno!.matricula}',
+                            style: TextStyle(
+                                fontSize: constraints.maxWidth * 0.05,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 50),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFFC5E0F8),
+                              side: BorderSide(color: Colors.black),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.zero,
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => Creditos()),
+                              );
+                            },
+                            child: Text(
+                              'Acerca de la aplicación',
+                              style: TextStyle(color: Colors.black),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => Creditos()),
-                      );
-                    },
-                    child: Text(
-                      'Acerca de la aplicación',
-                      style: TextStyle(color: Colors.black),
-                    ),
-                  ),
-                ],
+                  );
+                },
               )
             : CircularProgressIndicator(),
       ),

@@ -16,8 +16,8 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
   String _hora = '';
   DateTime _selectedDate = DateTime.now();
 
-  List<String> _motivosList = []; // Lista de motivos
-  List<String> _horasList = []; // Lista de horas
+  List<String> _motivosList = [];
+  List<String> _horasList = [];
 
   @override
   void initState() {
@@ -87,10 +87,12 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Container(
       child: SingleChildScrollView(
         physics: ClampingScrollPhysics(),
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(screenWidth * 0.05), // Ajuste del padding
         child: Form(
           key: _formKey,
           child: Column(
@@ -98,20 +100,25 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
             children: [
               Text(
                 'Ingresa Motivo:',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize:
+                        screenWidth * 0.04), // Tamaño de letra más pequeño
               ),
               SizedBox(height: 8),
-              _horasList.isEmpty
+              _motivosList.isEmpty
                   ? CircularProgressIndicator()
                   : DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         contentPadding:
-                            EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                            EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                       ),
                       hint: Text(
                         'Selecciona el motivo de tu cita',
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(
+                            fontSize: screenWidth *
+                                0.035), // Tamaño de letra más pequeño
                       ),
                       value: _motivo.isNotEmpty ? _motivo : null,
                       onChanged: (String? valor) {
@@ -126,7 +133,9 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                           child: Center(
                             child: Text(
                               motivo,
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(
+                                  fontSize: screenWidth *
+                                      0.035), // Tamaño de letra más pequeño
                             ),
                           ),
                         );
@@ -144,7 +153,10 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
               SizedBox(height: 40),
               Text(
                 'Selecciona Fecha:',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize:
+                        screenWidth * 0.04), // Tamaño de letra más pequeño
               ),
               SizedBox(height: 8),
               TableCalendar(
@@ -180,7 +192,10 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
               SizedBox(height: 20),
               Text(
                 'Selecciona Hora:',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize:
+                        screenWidth * 0.04), // Tamaño de letra más pequeño
               ),
               SizedBox(height: 8),
               _horasList.isEmpty
@@ -189,11 +204,13 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         contentPadding:
-                            EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                            EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                       ),
                       hint: Text(
                         'Selecciona una hora',
-                        style: TextStyle(fontSize: 16),
+                        style: TextStyle(
+                            fontSize: screenWidth *
+                                0.035), // Tamaño de letra más pequeño
                       ),
                       value: _hora.isNotEmpty ? _hora : null,
                       onChanged: (String? valor) {
@@ -208,7 +225,9 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                           child: Center(
                             child: Text(
                               hora,
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(
+                                  fontSize: screenWidth *
+                                      0.035), // Tamaño de letra más pequeño
                             ),
                           ),
                         );
@@ -230,13 +249,17 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                     backgroundColor:
                         MaterialStateProperty.all(Color(0xFFC5E0F8)),
                     padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
-                      EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                      EdgeInsets.symmetric(
+                          horizontal: screenWidth * 0.1, vertical: 12),
                     ),
                   ),
                   onPressed: _crearCita,
                   child: Text(
                     'Generar Cita',
-                    style: TextStyle(color: Colors.black, fontSize: 18),
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize:
+                            screenWidth * 0.04), // Tamaño de letra más pequeño
                   ),
                 ),
               )

@@ -42,7 +42,8 @@ class _LoginScreen extends State<LoginScreen> {
                 Image.asset(
                   "assets/images/logo.png",
                   width: screenWidth * 0.5,
-                  height: screenHeight * 0.2, // Ajusta el logo proporcionalmente
+                  height:
+                      screenHeight * 0.2, // Ajusta el logo proporcionalmente
                 ),
                 SizedBox(height: screenHeight * 0.02),
                 Text(
@@ -97,7 +98,8 @@ class _LoginScreen extends State<LoginScreen> {
                       ),
                       onPressed: () {
                         Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (context) => HomeRegistro()),
+                          MaterialPageRoute(
+                              builder: (context) => HomeRegistro()),
                         );
                       },
                       child: Text("Regístrate"),
