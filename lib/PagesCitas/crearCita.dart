@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:proyecto/Mensajes/mensajes.dart';
+import 'package:proyecto/firebase/consultas.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CrearCitaPage extends StatefulWidget {
@@ -17,55 +17,57 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
   DateTime _selectedDate = DateTime.now();
 
   List<String> _motivosList = []; // Lista de motivos
-  bool _isLoading = true; // Indicador de carga
+  List<String> _horasList = []; // Lista de horas
 
   @override
   void initState() {
     super.initState();
     _obtenerMotivos();
+    _obtenerHoras();
   }
 
   Future<void> _obtenerMotivos() async {
-    try {
-      var snapshot = await FirebaseFirestore.instance
-          .collection('motivos') // Nombre de la colección
-          .doc('Rb2tgoPfMh92tT9aGK0J') // ID del documento
-          .get();
+    List<String> motivos = await Consultas().obtenerMotivos();
+    setState(() {
+      _motivosList = motivos;
+    });
+  }
 
-      if (snapshot.exists) {
-        setState(() {
-          _motivosList = List<String>.from(snapshot['motivo']);
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Error al obtener los motivos: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  Future<void> _obtenerHoras() async {
+    List<String> horas = await Consultas().obtenerHoras();
+    setState(() {
+      _horasList = horas;
+    });
   }
 
   Future<void> _crearCita() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-
-    if (_formKey.currentState!.validate() && userId != null) {
-      try {
-        await FirebaseFirestore.instance.collection('citas').add({
-          'alumnoId': userId,
-          'motivo': _motivo,
-          'fecha': _fecha,
-          'hora': _hora,
-          'psicologoId': 'FL4AgbBVePXxX9ACspBZ0k4NrbD2',
-        });
-        Mensajes()
-            .showSuccessDialog(context, "La cita se ha creado correctamente");
-      } catch (e) {
-        print('Error al crear la cita: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al crear la cita')),
+    if (_formKey.currentState!.validate()) {
+      if (_selectedDate.weekday != DateTime.saturday &&
+          _selectedDate.weekday != DateTime.sunday) {
+        bool citaCreada = await Consultas().crearCita(
+          motivo: _motivo,
+          hora: _hora,
+          fecha: _fecha,
         );
+
+        if (citaCreada) {
+          setState(() {
+            _motivo = '';
+            _hora = '';
+            _fecha = '';
+            _selectedDate = DateTime.now();
+          });
+
+          Mensajes().showSuccessDialog(context, 'Cita creada con éxito');
+        } else {
+          Mensajes().showErrorDialog(context, 'Error al crear la cita');
+        }
+      } else {
+        Mensajes().showErrorDialog(
+            context, 'Los fines de semana no están disponibles');
       }
+    } else {
+      Mensajes().showErrorDialog(context, 'Debes de llenar todos los campos');
     }
   }
 
@@ -85,11 +87,8 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Crear Cita'),
-      ),
-      body: SingleChildScrollView(
+    return Container(
+      child: SingleChildScrollView(
         physics: ClampingScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -102,31 +101,33 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
-              _isLoading
+              _horasList.isEmpty
                   ? CircularProgressIndicator()
                   : DropdownButtonFormField<String>(
                       decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         contentPadding:
-                            EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                            EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                       ),
                       hint: Text(
                         'Selecciona el motivo de tu cita',
                         style: TextStyle(fontSize: 16),
                       ),
                       value: _motivo.isNotEmpty ? _motivo : null,
-                      onChanged: (String? newValue) {
+                      onChanged: (String? valor) {
                         setState(() {
-                          _motivo = newValue ?? '';
+                          _motivo = valor ?? '';
                         });
                       },
                       items: _motivosList
                           .map<DropdownMenuItem<String>>((String motivo) {
                         return DropdownMenuItem<String>(
                           value: motivo,
-                          child: Text(
-                            motivo,
-                            style: TextStyle(fontSize: 16),
+                          child: Center(
+                            child: Text(
+                              motivo,
+                              style: TextStyle(fontSize: 16),
+                            ),
                           ),
                         );
                       }).toList(),
@@ -136,6 +137,9 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                         }
                         return null;
                       },
+                      dropdownColor: Color(0xFFC5E0F8),
+                      borderRadius: BorderRadius.circular(20),
+                      isExpanded: true,
                     ),
               SizedBox(height: 40),
               Text(
@@ -179,26 +183,63 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 8),
-              TextFormField(
-                decoration: InputDecoration(
-                  hintText: 'Hora (HH:MM)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingresa una hora';
-                  }
-                  return null;
-                },
-                onChanged: (value) {
-                  _hora = value;
-                },
-              ),
+              _horasList.isEmpty
+                  ? CircularProgressIndicator()
+                  : DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                      ),
+                      hint: Text(
+                        'Selecciona una hora',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      value: _hora.isNotEmpty ? _hora : null,
+                      onChanged: (String? valor) {
+                        setState(() {
+                          _hora = valor ?? '';
+                        });
+                      },
+                      items: _horasList
+                          .map<DropdownMenuItem<String>>((String hora) {
+                        return DropdownMenuItem<String>(
+                          value: hora,
+                          child: Center(
+                            child: Text(
+                              hora,
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor selecciona una hora';
+                        }
+                        return null;
+                      },
+                      dropdownColor: Color(0xFFC5E0F8),
+                      borderRadius: BorderRadius.circular(20),
+                      isExpanded: true,
+                    ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _crearCita,
-                child: Text('Generar Cita'),
-              ),
+              Center(
+                child: ElevatedButton(
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all(Color(0xFFC5E0F8)),
+                    padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                      EdgeInsets.symmetric(horizontal: 40, vertical: 10),
+                    ),
+                  ),
+                  onPressed: _crearCita,
+                  child: Text(
+                    'Generar Cita',
+                    style: TextStyle(color: Colors.black, fontSize: 18),
+                  ),
+                ),
+              )
             ],
           ),
         ),

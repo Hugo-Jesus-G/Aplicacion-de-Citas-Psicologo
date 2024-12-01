@@ -1,10 +1,12 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto/Mensajes/mensajes.dart';
+import 'package:proyecto/Modelos/alumno.dart';
 import 'package:proyecto/firebase/firebase_auth_service.dart';
 
 class Consultas {
-  // Cambiar la forma en que se obtiene el id
   Future<String?> getUserId() async {
     return await FirebaseAuthService.getUserId();
   }
@@ -14,7 +16,6 @@ class Consultas {
 
     if (id != null) {
       try {
-        // Verificar en la colección de alumnos
         final alumnoDoc = await FirebaseFirestore.instance
             .collection('alumnos')
             .doc(id)
@@ -25,7 +26,6 @@ class Consultas {
           return nombre;
         }
 
-        // Verificar en la colección de psicólogos
         final psicologoDoc = await FirebaseFirestore.instance
             .collection('psicologos')
             .doc(id)
@@ -120,5 +120,141 @@ class Consultas {
       }
     }
     return [];
+  }
+
+//obtener correo
+  Future<String> getCorreo() async {
+    final id = await FirebaseAuthService.getUserId();
+
+    if (id != null) {
+      try {
+        final alumnoDoc = await FirebaseFirestore.instance
+            .collection('alumnos')
+            .doc(id)
+            .get();
+
+        if (alumnoDoc.exists) {
+          final correo = alumnoDoc.data()?['correo'] ?? 'Correo no encontrado';
+          return correo;
+        }
+
+        final psicologoDoc = await FirebaseFirestore.instance
+            .collection('psicologos')
+            .doc(id)
+            .get();
+
+        if (psicologoDoc.exists) {
+          final correo =
+              psicologoDoc.data()?['correo'] ?? 'Correo no encontrado';
+          return correo;
+        }
+
+        return 'Correo no encontrado'; // Si no se encuentra en ninguna colección
+      } catch (e) {
+        print('Error al obtener datos: $e');
+      }
+    }
+    return 'Correo no encontrado';
+  }
+
+  Future<Alumno> fetchAlumnoData() async {
+    final uid = await Consultas().getUserId();
+
+    if (uid != null) {
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('alumnos')
+            .doc(uid)
+            .get();
+
+        if (doc.exists) {
+          final data = doc.data();
+          final nombre = data?['nombre'] ?? 'Nombre no encontrado';
+          final correo = data?['correo'] ?? 'Correo no encontrado';
+          final telefono = data?['telefono'] ?? 'Teléfono no encontrado';
+          final matricula = data?['matricula'] ?? 'Matrícula no encontrada';
+
+          return Alumno(
+            nombre: nombre,
+            correo: correo,
+            telefono: telefono,
+            matricula: matricula,
+          );
+        } else {
+          return Alumno(
+              nombre: "No encontrado",
+              correo: "No encontrado",
+              telefono: "No encontrado",
+              matricula: "No encontrado");
+        }
+      } catch (e) {
+        print('Error al obtener datos: $e');
+      }
+    }
+    return Alumno(
+        nombre: "No encontrado",
+        correo: "No encontrado",
+        telefono: "No encontrado",
+        matricula: "No encontrado");
+  }
+
+  Future<bool> crearCita({
+    required String motivo,
+    required String hora,
+    required String fecha,
+  }) async {
+    final userId = await Consultas().getUserId();
+
+    try {
+      await FirebaseFirestore.instance.collection('citas').add({
+        'alumnoId': userId,
+        'motivo': motivo,
+        'fecha': fecha,
+        'hora': hora,
+        'psicologoId': 'FL4AgbBVePXxX9ACspBZ0k4NrbD2',
+      });
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Método para obtener los motivos
+  Future<List<String>> obtenerMotivos() async {
+    try {
+      var snapshot = await FirebaseFirestore.instance
+          .collection('motivos')
+          .doc('Rb2tgoPfMh92tT9aGK0J')
+          .get();
+
+      if (snapshot.exists) {
+        return List<String>.from(snapshot['motivo']);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print('Error al obtener los motivos: $e');
+      return [];
+    }
+  }
+
+// Método para obtener las horas
+  Future<List<String>> obtenerHoras() async {
+    try {
+      var snapshot = await FirebaseFirestore.instance
+          .collection('horarios')
+          .doc('NvnNKlbO3Z7md76Gw60Q')
+          .get();
+
+      if (snapshot.exists) {
+        return List<String>.from(snapshot['horas']);
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print('Error al obtener las horas: $e');
+      return [];
+    }
   }
 }
