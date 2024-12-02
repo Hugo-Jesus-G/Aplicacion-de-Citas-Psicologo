@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:proyecto/Mensajes/mensajes.dart';
 import 'package:proyecto/firebase/consultas.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -14,7 +13,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
   String _motivo = '';
   String _fecha = '';
   String _hora = '';
-  DateTime _selectedDate = DateTime.now();
+  DateTime? _selectedDate; // Cambia a DateTime? para permitir null
 
   List<String> _motivosList = [];
   List<String> _horasList = [];
@@ -23,7 +22,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
   void initState() {
     super.initState();
     _obtenerMotivos();
-    _obtenerHoras();
+    _obtenerHoras(_fecha);
   }
 
   Future<void> _obtenerMotivos() async {
@@ -33,8 +32,8 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
     });
   }
 
-  Future<void> _obtenerHoras() async {
-    List<String> horas = await Consultas().obtenerHoras();
+  Future<void> _obtenerHoras(String fecha) async {
+    List<String> horas = await Consultas().obtenerHorasCreacion(_fecha);
     setState(() {
       _horasList = horas;
     });
@@ -42,8 +41,13 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
 
   Future<void> _crearCita() async {
     if (_formKey.currentState!.validate()) {
-      if (_selectedDate.weekday != DateTime.saturday &&
-          _selectedDate.weekday != DateTime.sunday) {
+      if (_selectedDate != null &&
+          _selectedDate!.weekday != DateTime.saturday &&
+          _selectedDate!.weekday != DateTime.sunday) {
+        if (_fecha.isEmpty) {
+          Mensajes().showErrorDialog(context, 'Debes de seleccionar una fecha');
+          return;
+        }
         bool citaCreada = await Consultas().crearCita(
           motivo: _motivo,
           hora: _hora,
@@ -55,7 +59,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
             _motivo = '';
             _hora = '';
             _fecha = '';
-            _selectedDate = DateTime.now();
+            _selectedDate = null; // Restablece la selección de fecha
           });
 
           Mensajes().showSuccessDialog(context, 'Cita creada con éxito');
@@ -63,20 +67,31 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
           Mensajes().showErrorDialog(context, 'Error al crear la cita');
         }
       } else {
-        Mensajes().showErrorDialog(
-            context, 'Los fines de semana no están disponibles');
+        Mensajes().showErrorDialog(context, 'Debes de seleccionar una fecha');
       }
     } else {
       Mensajes().showErrorDialog(context, 'Debes de llenar todos los campos');
     }
   }
 
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+  Future<void> _onDaySelected(DateTime selectedDay, DateTime focusedDay) async {
     if (selectedDay.weekday != DateTime.saturday &&
         selectedDay.weekday != DateTime.sunday) {
+      String fechaSeleccionada =
+          '${selectedDay.day}/${selectedDay.month}/${selectedDay.year}';
+
       setState(() {
+        _fecha = fechaSeleccionada;
         _selectedDate = selectedDay;
-        _fecha = '${selectedDay.day}/${selectedDay.month}/${selectedDay.year}';
+
+        // Obtener las horas disponibles para la fecha seleccionada
+        Consultas().obtenerHorasCreacion(_fecha).then((horasDisponibles) {
+          Set<String> horasUnicas = Set.from(horasDisponibles);
+
+          setState(() {
+            _horasList = horasUnicas.toList();
+          });
+        });
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -92,7 +107,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
     return Container(
       child: SingleChildScrollView(
         physics: ClampingScrollPhysics(),
-        padding: EdgeInsets.all(screenWidth * 0.05), // Ajuste del padding
+        padding: EdgeInsets.all(screenWidth * 0.05),
         child: Form(
           key: _formKey,
           child: Column(
@@ -101,9 +116,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
               Text(
                 'Ingresa Motivo:',
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize:
-                        screenWidth * 0.04), // Tamaño de letra más pequeño
+                    fontWeight: FontWeight.bold, fontSize: screenWidth * 0.04),
               ),
               SizedBox(height: 8),
               _motivosList.isEmpty
@@ -116,9 +129,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                       ),
                       hint: Text(
                         'Selecciona el motivo de tu cita',
-                        style: TextStyle(
-                            fontSize: screenWidth *
-                                0.035), // Tamaño de letra más pequeño
+                        style: TextStyle(fontSize: screenWidth * 0.035),
                       ),
                       value: _motivo.isNotEmpty ? _motivo : null,
                       onChanged: (String? valor) {
@@ -133,9 +144,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                           child: Center(
                             child: Text(
                               motivo,
-                              style: TextStyle(
-                                  fontSize: screenWidth *
-                                      0.035), // Tamaño de letra más pequeño
+                              style: TextStyle(fontSize: screenWidth * 0.035),
                             ),
                           ),
                         );
@@ -154,13 +163,12 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
               Text(
                 'Selecciona Fecha:',
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize:
-                        screenWidth * 0.04), // Tamaño de letra más pequeño
+                    fontWeight: FontWeight.bold, fontSize: screenWidth * 0.04),
               ),
               SizedBox(height: 8),
               TableCalendar(
-                focusedDay: _selectedDate,
+                focusedDay: _selectedDate ??
+                    DateTime.now(), // Si no hay selección, usa la fecha actual
                 firstDay: DateTime.utc(2024, 1, 1),
                 lastDay: DateTime.utc(2101, 1, 1),
                 onDaySelected: _onDaySelected,
@@ -193,9 +201,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
               Text(
                 'Selecciona Hora:',
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize:
-                        screenWidth * 0.04), // Tamaño de letra más pequeño
+                    fontWeight: FontWeight.bold, fontSize: screenWidth * 0.04),
               ),
               SizedBox(height: 8),
               _horasList.isEmpty
@@ -208,9 +214,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                       ),
                       hint: Text(
                         'Selecciona una hora',
-                        style: TextStyle(
-                            fontSize: screenWidth *
-                                0.035), // Tamaño de letra más pequeño
+                        style: TextStyle(fontSize: screenWidth * 0.035),
                       ),
                       value: _hora.isNotEmpty ? _hora : null,
                       onChanged: (String? valor) {
@@ -225,9 +229,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                           child: Center(
                             child: Text(
                               hora,
-                              style: TextStyle(
-                                  fontSize: screenWidth *
-                                      0.035), // Tamaño de letra más pequeño
+                              style: TextStyle(fontSize: screenWidth * 0.035),
                             ),
                           ),
                         );
@@ -257,9 +259,7 @@ class _CrearCitaPageState extends State<CrearCitaPage> {
                   child: Text(
                     'Generar Cita',
                     style: TextStyle(
-                        color: Colors.black,
-                        fontSize:
-                            screenWidth * 0.04), // Tamaño de letra más pequeño
+                        color: Colors.black, fontSize: screenWidth * 0.04),
                   ),
                 ),
               )

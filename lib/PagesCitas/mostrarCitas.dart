@@ -86,20 +86,22 @@ class _MostrarCitasState extends State<MostrarCitas> {
               final citas = snapshot.data!;
 
               final citasFiltradas = citas.where((cita) {
+                // Obtener la hora correctamente
                 String hora = cita['hora'];
                 if (hora.contains('-')) {
-                  hora = hora.split('-')[1];
+                  hora = hora.split('-')[0];
                 }
 
                 DateTime citaDateTime;
                 try {
                   citaDateTime = DateFormat('dd/MM/yyyy HH:mm')
-                      .parse('${cita['fecha']} $hora', true);
+                      .parse('${cita['fecha']} $hora');
                 } catch (e) {
                   return false;
                 }
 
                 bool isExpired = citaDateTime.isBefore(DateTime.now());
+
                 return mostrarPendientes ? !isExpired : isExpired;
               }).toList();
 
@@ -128,17 +130,14 @@ class _MostrarCitasState extends State<MostrarCitas> {
                   final cita = citasFiltradas[index];
                   bool editaryeliminar = false;
 
-                  DateTime citaDateTime = DateFormat('dd/MM/yyyy HH:mm')
-                      .parse('${cita['fecha']} ${cita['hora']}');
-
-                  bool isExpired = citaDateTime.isBefore(DateTime.now());
-
-                  String horaInicio = cita['hora'].split('-')[0];
+                  String horaFin = cita['hora'].split('-')[1];
                   // Verificar si faltan 24 horas para la cita
                   DateTime citaActual = DateFormat('dd/MM/yyyy HH:mm')
-                      .parse('${cita['fecha']} $horaInicio');
-                  DateTime fechaActual = DateTime.now();
-                  final diferencia = citaActual.difference(fechaActual).inHours;
+                      .parse('${cita['fecha']} $horaFin');
+
+                  bool isExpired = citaActual.isBefore(DateTime.now());
+
+                  final diferencia = citaActual.difference(citaActual).inHours;
                   if (diferencia <= 24) {
                     editaryeliminar = true;
                   }

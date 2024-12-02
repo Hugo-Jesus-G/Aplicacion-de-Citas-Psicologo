@@ -31,7 +31,6 @@ class FirebaseAuthService {
 
       final userId = userCredential.user!.uid;
 
-      // Verificar si el usuario es un alumno o psicólogo
       DocumentSnapshot alumnoDoc = await FirebaseFirestore.instance
           .collection('alumnos')
           .doc(userId)

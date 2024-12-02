@@ -47,7 +47,6 @@ class Consultas {
   Stream<List<Map<String, dynamic>>> getCitasDelUsuario(String? id) async* {
     if (id != null) {
       try {
-        // Escucha los cambios en la colección 'citas'
         yield* FirebaseFirestore.instance
             .collection('citas')
             .where('alumnoId', isEqualTo: id)
@@ -93,32 +92,27 @@ class Consultas {
     }
   }
 
-// Obtener citas generales del psicólogo en tiempo real
   Stream<List<Map<String, dynamic>>> getCitasDelPsicologoStream() {
     final psicologoId =
         getUserId(); // Suponiendo que obtienes el ID del psicólogo
 
-    if (psicologoId != null) {
-      try {
-        return FirebaseFirestore.instance
-            .collection('citas')
-            .where('psicologoId',
-                isEqualTo: psicologoId) // Filtra por el psicólogo
-            .snapshots() // Obtener un Stream en lugar de un Future
-            .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            data['id'] = doc.id; // Agregar el ID del documento al mapa
-            return data;
-          }).toList();
-        });
-      } catch (e) {
-        print('Error al obtener citas: $e');
-        return Stream.value([]); // Devuelve un stream vacío en caso de error
-      }
+    try {
+      return FirebaseFirestore.instance
+          .collection('citas')
+          .where('psicologoId',
+              isEqualTo: psicologoId) // Filtra por el psicólogo
+          .snapshots() // Obtener un Stream en lugar de un Future
+          .map((snapshot) {
+        return snapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id; // Agregar el ID del documento al mapa
+          return data;
+        }).toList();
+      });
+    } catch (e) {
+      print('Error al obtener citas: $e');
+      return Stream.value([]); // Devuelve un stream vacío en caso de error
     }
-    return Stream.value(
-        []); // Devuelve un stream vacío si no hay ID de psicólogo
   }
 
 //obtener correo
@@ -237,8 +231,41 @@ class Consultas {
     }
   }
 
+  Future<List<String>> obtenerHorasCreacion(String fechaSeleccionada) async {
+    try {
+      // Obtener todas las horas de la colección de horarios
+      var snapshotHorarios = await FirebaseFirestore.instance
+          .collection('horarios')
+          .doc('NvnNKlbO3Z7md76Gw60Q')
+          .get();
+
+      if (!snapshotHorarios.exists) {
+        return [];
+      }
+
+      List<String> horas = List<String>.from(snapshotHorarios['horas']);
+
+      var snapshotCitas = await FirebaseFirestore.instance
+          .collection('citas')
+          .where('fecha', isEqualTo: fechaSeleccionada)
+          .get();
+
+      List horasOcupadas =
+          snapshotCitas.docs.map((doc) => doc['hora']).toList();
+
+      // Filtrar las horas disponibles (aquellas que no están ocupadas)
+      List<String> horasDisponibles =
+          horas.where((hora) => !horasOcupadas.contains(hora)).toList();
+
+      return horasDisponibles;
+    } catch (e) {
+      print('Error al obtener las horas: $e');
+      return [];
+    }
+  }
+
 // Método para obtener las horas
-  Future<List<String>> obtenerHoras() async {
+  Future<List<String>> obtenerHorasEdit() async {
     try {
       var snapshot = await FirebaseFirestore.instance
           .collection('horarios')
@@ -308,6 +335,22 @@ class Consultas {
       });
     } catch (e) {
       print('Error al actualizar la asistencia: $e');
+    }
+  }
+
+  Future<bool> verificarCitaExistente(String fecha, String hora) async {
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('citas')
+          .where('fecha', isEqualTo: fecha)
+          .where('hora', isEqualTo: hora)
+          .get();
+
+      return querySnapshot
+          .docs.isNotEmpty; // Si hay resultados, la cita ya existe
+    } catch (e) {
+      print('Error al verificar cita existente: $e');
+      return false; // En caso de error, asumir que no existe la cita
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proyecto/Mensajes/mensajes.dart';
 import 'package:proyecto/firebase/consultas.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -37,9 +38,10 @@ class _EditarCitaPageState extends State<EditarCitaPage> {
   }
 
   Future<void> _obtenerHoras() async {
-    List<String> horas = await Consultas().obtenerHoras();
+    List<String> horas = await Consultas().obtenerHorasEdit();
     setState(() {
-      _horasList = horas;
+      // Eliminar duplicados de la lista de horas
+      _horasList = horas.toSet().toList();
     });
   }
 
@@ -55,8 +57,18 @@ class _EditarCitaPageState extends State<EditarCitaPage> {
 
   Future<void> _guardarCambios() async {
     if (_formKey.currentState!.validate()) {
+      bool citaExistente =
+          await Consultas().verificarCitaExistente(_nuevaFecha, _nuevaHora);
+
+      if (citaExistente) {
+        Mensajes().showErrorDialog(context,
+            'Error ya existe una cita programada para esa fecha y hora.');
+        return;
+      }
+
       await Consultas()
           .editarCita(widget.citaId, _nuevoMotivo, _nuevaFecha, _nuevaHora);
+
       Navigator.pop(context);
     }
   }
@@ -243,14 +255,13 @@ class _EditarCitaPageState extends State<EditarCitaPage> {
                 SizedBox(height: 20),
                 ElevatedButton(
                   style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(
-                        Color(0xFFC5E0F8)), // Color verde
-                    padding: MaterialStateProperty.all(
-                        EdgeInsets.symmetric(horizontal: 40, vertical: 12)),
-                    shape: MaterialStateProperty.all(RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    )),
-                  ),
+                      backgroundColor: MaterialStateProperty.all(
+                          Color(0xFFC5E0F8)), // Color verde
+                      padding: MaterialStateProperty.all(
+                          EdgeInsets.symmetric(horizontal: 40, vertical: 12)),
+                      shape: MaterialStateProperty.all(RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ))),
                   onPressed: _guardarCambios,
                   child: Text(
                     'Guardar Cambios',
