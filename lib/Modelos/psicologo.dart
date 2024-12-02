@@ -1,22 +1,22 @@
-class Alumno {
+class Psicologo {
   final String nombre;
   final String correo;
   final String telefono;
-  final String matricula;
+  final String especialidad;
 
-  Alumno({
+  Psicologo({
     required this.nombre,
     required this.correo,
     required this.telefono,
-    required this.matricula,
+    required this.especialidad,
   });
 
-  factory Alumno.fromFirestore(Map<String, dynamic> data) {
-    return Alumno(
+  factory Psicologo.fromFirestore(Map<String, dynamic> data) {
+    return Psicologo(
       nombre: data['nombre'] ?? '',
       correo: data['correo'] ?? '',
       telefono: data['telefono'] ?? '',
-      matricula: data['matricula'] ?? '',
+      especialidad: data['especialidad'] ?? '',
     );
   }
 }

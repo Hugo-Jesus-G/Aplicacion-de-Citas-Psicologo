@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:proyecto/PagesCitas/bienvenida.dart';
-import 'package:proyecto/PagesCitas/crearCita.dart';
-import 'package:proyecto/PagesCitas/perfil.dart';
-import 'package:proyecto/PagesCitas/mostrarCitas.dart';
+import 'package:proyecto/PagesPsico/bienvenidapsico.dart';
+import 'package:proyecto/PagesPsico/consultasPsico.dart';
+import 'package:proyecto/PagesPsico/pacientes.dart';
+import 'package:proyecto/PagesPsico/perfilPsico.dart';
 import 'package:proyecto/firebase/consultas.dart';
 import 'package:proyecto/main.dart';
 
-class Inicio extends StatefulWidget {
-  Inicio({super.key});
+class InicioPsico extends StatefulWidget {
+  InicioPsico({super.key});
 
   @override
-  _InicioState createState() => _InicioState();
+  _InicioPsicoState createState() => _InicioPsicoState();
 }
 
-class _InicioState extends State<Inicio> {
+class _InicioPsicoState extends State<InicioPsico> {
   int _selectedIndex = 0;
 
   final List<Widget> _widgetOptions = [
-    Bienvenida(),
-    CrearCitaPage(),
-    MostrarCitas(),
-    Perfil(),
+    BienvenidaPsico(),
+    MostrarCitasPsicologo(),
+    PacientesScreen(),
+    PerfilPsicologo(),
   ];
 
-  void _selecSeccion(int index) {
+  void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
@@ -42,10 +42,10 @@ class _InicioState extends State<Inicio> {
               ? Text('Inicio',
                   style: TextStyle(color: Colors.black, fontSize: 30))
               : _selectedIndex == 1
-                  ? Text('Crear Cita',
+                  ? Text('Citas',
                       style: TextStyle(color: Colors.black, fontSize: 30))
                   : _selectedIndex == 2
-                      ? Text('Consultar Citas',
+                      ? Text('Pacientes',
                           style: TextStyle(color: Colors.black, fontSize: 30))
                       : Text('Perfil',
                           style: TextStyle(color: Colors.black, fontSize: 30)),
@@ -66,12 +66,12 @@ class _InicioState extends State<Inicio> {
             items: <BottomNavigationBarItem>[
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
               BottomNavigationBarItem(
-                icon: Icon(Icons.add),
-                label: 'Crear Cita',
+                icon: Icon(Icons.remove_red_eye),
+                label: 'Citas',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.list),
-                label: 'Consultar Citas',
+                label: 'Pacientes',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.person),
@@ -79,7 +79,7 @@ class _InicioState extends State<Inicio> {
               ),
             ],
             currentIndex: _selectedIndex,
-            onTap: _selecSeccion,
+            onTap: _onItemTapped,
             selectedItemColor: const Color.fromARGB(255, 12, 36, 172),
             unselectedItemColor: const Color.fromARGB(255, 0, 0, 0),
             backgroundColor: Colors.white,
