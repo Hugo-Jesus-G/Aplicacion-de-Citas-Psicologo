@@ -12,6 +12,7 @@ class Perfil extends StatefulWidget {
 
 class _PerfilState extends State<Perfil> {
   Alumno? alumno;
+  final id = FirebaseAuth.instance.currentUser!.uid;
 
   @override
   void initState() {
@@ -20,7 +21,7 @@ class _PerfilState extends State<Perfil> {
   }
 
   Future<void> _infoAlumno() async {
-    final fetchedAlumno = await Consultas().fetchAlumnoData();
+    final fetchedAlumno = await Consultas().fetchAlumnoData(id);
     setState(() {
       alumno = fetchedAlumno;
     });
@@ -41,6 +42,8 @@ class _PerfilState extends State<Perfil> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        automaticallyImplyLeading: false, // Desactiva el botón de regreso
+
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         actions: [
           Padding(

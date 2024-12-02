@@ -87,6 +87,7 @@ class FirebaseAuthService {
 
       // Guardar el usuario en Firestore
       await FirebaseFirestore.instance.collection('alumnos').doc(uid).set({
+        'id': uid,
         'correo': email,
         'matricula': matricula,
         'nombre': name,

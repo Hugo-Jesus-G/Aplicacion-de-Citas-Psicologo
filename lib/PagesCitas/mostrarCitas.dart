@@ -10,6 +10,20 @@ class MostrarCitas extends StatefulWidget {
 
 class _MostrarCitasState extends State<MostrarCitas> {
   bool mostrarPendientes = true;
+  String? id;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+  }
+
+  Future<void> _loadUserId() async {
+    id = await Consultas().getUserId();
+    setState(() {
+      id;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +73,7 @@ class _MostrarCitasState extends State<MostrarCitas> {
         ),
         Expanded(
           child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: Consultas().getCitasDelUsuario(),
+            stream: Consultas().getCitasDelUsuario(id),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
@@ -189,7 +203,7 @@ class _MostrarCitasState extends State<MostrarCitas> {
                                   );
                                 },
                               ),
-                            if (!editaryeliminar || isExpired)
+                            if (!editaryeliminar)
                               IconButton(
                                 icon: Icon(Icons.delete, color: Colors.red),
                                 onPressed: () async {
@@ -201,6 +215,36 @@ class _MostrarCitasState extends State<MostrarCitas> {
                                   }
                                 },
                               ),
+                            isExpired
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        cita['asistencia']
+                                            ? Icons.check_circle
+                                            : Icons.cancel,
+                                        color: cita['asistencia']
+                                            ? Colors.green
+                                            : Colors.red,
+                                      ),
+                                      SizedBox(
+                                          height:
+                                              4), // Espacio entre el ícono y el texto
+                                      Text(
+                                        cita['asistencia']
+                                            ? 'Asistió'
+                                            : 'NO asistió',
+                                        style: TextStyle(
+                                          color: cita['asistencia']
+                                              ? Colors.green
+                                              : Colors.red,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Icon(Icons.timer, color: Colors.blue),
                           ],
                         ),
                       ),

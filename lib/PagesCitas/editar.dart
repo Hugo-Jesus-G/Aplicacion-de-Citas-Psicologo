@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:proyecto/firebase/consultas.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class EditarCitaPage extends StatefulWidget {
   final String citaId;
@@ -23,6 +24,24 @@ class _EditarCitaPageState extends State<EditarCitaPage> {
   late String _nuevoMotivo;
   late String _nuevaFecha;
   late String _nuevaHora;
+  late String _fecha;
+  DateTime? _selectedDate;
+  List<String> _motivosList = [];
+  List<String> _horasList = [];
+
+  Future<void> _obtenerMotivos() async {
+    List<String> motivos = await Consultas().obtenerMotivos();
+    setState(() {
+      _motivosList = motivos;
+    });
+  }
+
+  Future<void> _obtenerHoras() async {
+    List<String> horas = await Consultas().obtenerHoras();
+    setState(() {
+      _horasList = horas;
+    });
+  }
 
   @override
   void initState() {
@@ -30,6 +49,8 @@ class _EditarCitaPageState extends State<EditarCitaPage> {
     _nuevoMotivo = widget.motivo;
     _nuevaFecha = widget.fecha;
     _nuevaHora = widget.hora;
+    _obtenerMotivos();
+    _obtenerHoras();
   }
 
   Future<void> _guardarCambios() async {
@@ -40,8 +61,38 @@ class _EditarCitaPageState extends State<EditarCitaPage> {
     }
   }
 
+  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
+    if (selectedDay.weekday != DateTime.saturday &&
+        selectedDay.weekday != DateTime.sunday) {
+      setState(() {
+        _selectedDate = selectedDay;
+        _nuevaFecha =
+            '${selectedDay.day}/${selectedDay.month}/${selectedDay.year}';
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Los fines de semana no están disponibles.')),
+      );
+    }
+  }
+
+  String _convertirFecha(String fecha) {
+    // Divide la fecha usando '/' como separador
+    List<String> partesFecha = fecha.split('/');
+
+    // Convierte las partes a enteros (día, mes, año)
+    int dia = int.parse(partesFecha[0]);
+    int mes = int.parse(partesFecha[1]);
+    int ano = int.parse(partesFecha[2]);
+
+    // Devuelve la fecha en formato 'yyyy-MM-dd'
+    return '$ano-${mes.toString().padLeft(2, '0')}-${dia.toString().padLeft(2, '0')}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
@@ -52,7 +103,6 @@ class _EditarCitaPageState extends State<EditarCitaPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
-          // Permite desplazar el contenido en caso de teclado
           child: Form(
             key: _formKey,
             child: Column(
@@ -67,66 +117,130 @@ class _EditarCitaPageState extends State<EditarCitaPage> {
                   ),
                 ),
                 SizedBox(height: 20),
-                TextFormField(
-                  initialValue: _nuevoMotivo,
-                  decoration: InputDecoration(
-                    labelText: 'Motivo',
-                    labelStyle: TextStyle(color: Colors.grey),
-                    border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor ingresa un motivo';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) => _nuevoMotivo = value,
-                ),
+                _motivosList.isEmpty
+                    ? CircularProgressIndicator()
+                    : DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 16, horizontal: 20),
+                        ),
+                        hint: Text(
+                          'Selecciona el motivo de tu cita',
+                          style: TextStyle(
+                              fontSize: screenWidth *
+                                  0.035), // Tamaño de letra más pequeño
+                        ),
+                        value: _nuevoMotivo.isNotEmpty ? _nuevoMotivo : null,
+                        onChanged: (String? valor) {
+                          setState(() {
+                            _nuevoMotivo = valor ?? '';
+                          });
+                        },
+                        items: _motivosList
+                            .map<DropdownMenuItem<String>>((String motivo) {
+                          return DropdownMenuItem<String>(
+                            value: motivo,
+                            child: Center(
+                              child: Text(
+                                motivo,
+                                style: TextStyle(
+                                    fontSize: screenWidth *
+                                        0.035), // Tamaño de letra más pequeño
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor selecciona un motivo';
+                          }
+                          return null;
+                        },
+                        dropdownColor: Color(0xFFC5E0F8),
+                        borderRadius: BorderRadius.circular(20),
+                        isExpanded: true,
+                      ),
+                SizedBox(height: 40),
                 SizedBox(height: 16),
-                TextFormField(
-                  initialValue: _nuevaFecha,
-                  decoration: InputDecoration(
-                    labelText: 'Fecha (dd/MM/yyyy)',
-                    labelStyle: TextStyle(color: Colors.grey),
-                    border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor ingresa una fecha';
-                    }
-                    return null;
+                SizedBox(height: 8),
+                TableCalendar(
+                  focusedDay: DateTime.parse(_convertirFecha(_nuevaFecha)),
+                  firstDay: DateTime.utc(2024, 1, 1),
+                  lastDay: DateTime.utc(2101, 1, 1),
+                  onDaySelected: _onDaySelected,
+                  selectedDayPredicate: (day) => isSameDay(day, _selectedDate),
+                  enabledDayPredicate: (day) {
+                    return day
+                        .isAfter(DateTime.now().subtract(Duration(days: 1)));
                   },
-                  onChanged: (value) => _nuevaFecha = value,
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  initialValue: _nuevaHora,
-                  decoration: InputDecoration(
-                    labelText: 'Hora (HH:mm)',
-                    labelStyle: TextStyle(color: Colors.grey),
-                    border: OutlineInputBorder(),
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-                    filled: true,
-                    fillColor: Colors.white,
+                  calendarStyle: CalendarStyle(
+                    todayDecoration: BoxDecoration(
+                      color: Colors.blueAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                    ),
+                    weekendDecoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    disabledDecoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.0),
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Por favor ingresa una hora';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) => _nuevaHora = value,
+                  availableGestures: AvailableGestures.none,
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 20),
+                SizedBox(height: 8),
+                _horasList.isEmpty
+                    ? CircularProgressIndicator()
+                    : DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                              vertical: 16, horizontal: 20),
+                        ),
+                        hint: Text(
+                          'Selecciona una hora',
+                          style: TextStyle(
+                              fontSize: screenWidth *
+                                  0.035), // Tamaño de letra más pequeño
+                        ),
+                        value: _nuevaHora.isNotEmpty ? _nuevaHora : null,
+                        onChanged: (String? valor) {
+                          setState(() {
+                            _nuevaHora = valor ?? '';
+                          });
+                        },
+                        items: _horasList
+                            .map<DropdownMenuItem<String>>((String hora) {
+                          return DropdownMenuItem<String>(
+                            value: hora,
+                            child: Center(
+                              child: Text(
+                                hora,
+                                style: TextStyle(
+                                    fontSize: screenWidth *
+                                        0.035), // Tamaño de letra más pequeño
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Por favor selecciona una hora';
+                          }
+                          return null;
+                        },
+                        dropdownColor: Color(0xFFC5E0F8),
+                        borderRadius: BorderRadius.circular(20),
+                        isExpanded: true,
+                      ),
+                SizedBox(height: 20),
                 ElevatedButton(
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(

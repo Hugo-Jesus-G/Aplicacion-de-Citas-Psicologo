@@ -34,6 +34,8 @@ class _InicioState extends State<Inicio> {
     return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
+          automaticallyImplyLeading: false, // Desactiva el botón de regreso
+
           backgroundColor: const Color.fromARGB(255, 255, 255, 255),
           centerTitle: true,
           title: _selectedIndex == 0

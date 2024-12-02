@@ -1,9 +1,8 @@
-import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:proyecto/Mensajes/mensajes.dart';
 import 'package:proyecto/Modelos/alumno.dart';
+import 'package:proyecto/Modelos/psicologo.dart';
 import 'package:proyecto/firebase/firebase_auth_service.dart';
 
 class Consultas {
@@ -45,9 +44,7 @@ class Consultas {
     return 'Nombre no encontrado';
   }
 
-  Stream<List<Map<String, dynamic>>> getCitasDelUsuario() async* {
-    final id = await getUserId();
-
+  Stream<List<Map<String, dynamic>>> getCitasDelUsuario(String? id) async* {
     if (id != null) {
       try {
         // Escucha los cambios en la colección 'citas'
@@ -96,30 +93,32 @@ class Consultas {
     }
   }
 
-//obtener citas generales del psciologo
-  Future<List<Map<String, dynamic>>> getCitasDelPsicologo() async {
-    final psicologoId = await getUserId();
+// Obtener citas generales del psicólogo en tiempo real
+  Stream<List<Map<String, dynamic>>> getCitasDelPsicologoStream() {
+    final psicologoId =
+        getUserId(); // Suponiendo que obtienes el ID del psicólogo
 
     if (psicologoId != null) {
       try {
-        QuerySnapshot snapshot = await FirebaseFirestore.instance
+        return FirebaseFirestore.instance
             .collection('citas')
             .where('psicologoId',
-                isEqualTo:
-                    psicologoId) // Suponiendo que este es el campo en la colección 'citas'
-            .get();
-
-        return snapshot.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          data['id'] = doc.id; // Agregar el ID del documento al mapa
-          return data;
-        }).toList();
+                isEqualTo: psicologoId) // Filtra por el psicólogo
+            .snapshots() // Obtener un Stream en lugar de un Future
+            .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            data['id'] = doc.id; // Agregar el ID del documento al mapa
+            return data;
+          }).toList();
+        });
       } catch (e) {
         print('Error al obtener citas: $e');
-        return [];
+        return Stream.value([]); // Devuelve un stream vacío en caso de error
       }
     }
-    return [];
+    return Stream.value(
+        []); // Devuelve un stream vacío si no hay ID de psicólogo
   }
 
 //obtener correo
@@ -157,41 +156,39 @@ class Consultas {
     return 'Correo no encontrado';
   }
 
-  Future<Alumno> fetchAlumnoData() async {
-    final uid = await Consultas().getUserId();
+  Future<Alumno> fetchAlumnoData(String uid) async {
+    try {
+      final doc =
+          await FirebaseFirestore.instance.collection('alumnos').doc(uid).get();
 
-    if (uid != null) {
-      try {
-        final doc = await FirebaseFirestore.instance
-            .collection('alumnos')
-            .doc(uid)
-            .get();
+      if (doc.exists) {
+        final data = doc.data();
+        final idAlumno = data?['id'] ?? 'ID no encontrado';
+        final nombre = data?['nombre'] ?? 'Nombre no encontrado';
+        final correo = data?['correo'] ?? 'Correo no encontrado';
+        final telefono = data?['telefono'] ?? 'Teléfono no encontrado';
+        final matricula = data?['matricula'] ?? 'Matrícula no encontrada';
 
-        if (doc.exists) {
-          final data = doc.data();
-          final nombre = data?['nombre'] ?? 'Nombre no encontrado';
-          final correo = data?['correo'] ?? 'Correo no encontrado';
-          final telefono = data?['telefono'] ?? 'Teléfono no encontrado';
-          final matricula = data?['matricula'] ?? 'Matrícula no encontrada';
-
-          return Alumno(
-            nombre: nombre,
-            correo: correo,
-            telefono: telefono,
-            matricula: matricula,
-          );
-        } else {
-          return Alumno(
-              nombre: "No encontrado",
-              correo: "No encontrado",
-              telefono: "No encontrado",
-              matricula: "No encontrado");
-        }
-      } catch (e) {
-        print('Error al obtener datos: $e');
+        return Alumno(
+          id: idAlumno,
+          nombre: nombre,
+          correo: correo,
+          telefono: telefono,
+          matricula: matricula,
+        );
+      } else {
+        return Alumno(
+            id: "No encontrado",
+            nombre: "No encontrado",
+            correo: "No encontrado",
+            telefono: "No encontrado",
+            matricula: "No encontrado");
       }
+    } catch (e) {
+      print('Error al obtener datos: $e');
     }
     return Alumno(
+        id: "No encontrado",
         nombre: "No encontrado",
         correo: "No encontrado",
         telefono: "No encontrado",
@@ -212,6 +209,7 @@ class Consultas {
         'fecha': fecha,
         'hora': hora,
         'psicologoId': 'FL4AgbBVePXxX9ACspBZ0k4NrbD2',
+        'asistencia': false,
       });
 
       return true;
@@ -255,6 +253,61 @@ class Consultas {
     } catch (e) {
       print('Error al obtener las horas: $e');
       return [];
+    }
+  }
+
+  Future<Psicologo?> fetchPsicologoData() async {
+    try {
+      String? uid = await Consultas().getUserId();
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('psicologos')
+          .doc(uid)
+          .get();
+
+      if (snapshot.exists) {
+        return Psicologo.fromFirestore(snapshot.data() as Map<String, dynamic>);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print("Error al obtener datos del psicólogo: $e");
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getCitasDelPsicologo() async {
+    final psicologoId =
+        await getUserId(); // Suponiendo que obtienes el ID del psicólogo
+
+    if (psicologoId != null) {
+      try {
+        QuerySnapshot snapshot = await FirebaseFirestore.instance
+            .collection('citas')
+            .where('psicologoId',
+                isEqualTo: psicologoId) // Filtra por el psicólogo
+            .get(); // Obtiene las citas
+
+        return snapshot.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          data['id'] = doc.id; // Agregar el ID del documento al mapa
+          return data;
+        }).toList(); // Convierte los documentos en una lista de mapas
+      } catch (e) {
+        print('Error al obtener citas: $e');
+        return [];
+      }
+    }
+    return [];
+  }
+
+  // Método para actualizar la asistencia en la base de datos
+  Future<void> updateAsistencia(String citaId, bool asistencia) async {
+    try {
+      await FirebaseFirestore.instance.collection('citas').doc(citaId).update({
+        'asistencia': asistencia,
+      });
+    } catch (e) {
+      print('Error al actualizar la asistencia: $e');
     }
   }
 }
